@@ -15,7 +15,7 @@ func NewRouter(apiHandler *handler.DataHandler) nethttp.Handler {
 	r.Use(middleware.Logger)
 	r.Use(middleware.Recoverer)
 
-	r.Route("/internal", func(r chi.Router) {
+	r.Route("/api/v1", func(r chi.Router) {
 		r.Get("/appointments", apiHandler.SearchAppointments)
 
 		r.Route("/reports", func(r chi.Router) {
