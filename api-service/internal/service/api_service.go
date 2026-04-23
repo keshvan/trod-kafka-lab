@@ -2,8 +2,10 @@ package service
 
 import (
 	"context"
+	"fmt"
 	"net/url"
 
+	"github.com/google/uuid"
 	"github.com/keshvan/trod-kafka-lab/api-service/internal/dto"
 )
 
@@ -30,7 +32,22 @@ func NewAPIService(producer Producer, dataClient DataClient) *APIService {
 }
 
 func (s *APIService) AddBatch(ctx context.Context, items []dto.AppointmentEvent) error {
-	return s.producer.PublishBatch(ctx, items)
+	prepared := make([]dto.AppointmentEvent, len(items))
+	copy(prepared, items)
+
+	for i := range prepared {
+		if prepared[i].Appointment.ID != "" {
+			continue
+		}
+
+		if prepared[i].Action != "create" {
+			return fmt.Errorf("appointment id is required for action %q", prepared[i].Action)
+		}
+
+		prepared[i].Appointment.ID = uuid.NewString()
+	}
+
+	return s.producer.PublishBatch(ctx, prepared)
 }
 
 func (s *APIService) SearchAppointments(ctx context.Context, query url.Values) ([]byte, error) {
